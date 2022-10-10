@@ -1,7 +1,9 @@
 ﻿using Dapper.Application.Interfaces;
 using Dapper.Core.Entities;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +12,23 @@ namespace Dapper.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository
     {
-        public Task<int> AddAsync(Product entity)
+        private readonly IConfiguration _configuration;
+        public ProductRepository(IConfiguration configuration)
         {
-            throw new NotImplementedException();
+            _configuration = configuration;
+        }
+
+
+        public async Task<int> AddAsync(Product entity)
+        {
+            entity.AddedOn = DateTime.Now;
+            var sql = "Insert into Products (Name,Description,Barcode,Rate,AddedOn) VALUES (@Name,@Description,@Barcode,@Rate,@AddedOn)";
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                connection.Open();
+                var result = await connection.ExecuteAsync(sql, entity);
+                return result;
+            }
         }
 
         public Task<int> DeleteAsync(int id)
