@@ -1,5 +1,6 @@
 ﻿using Dapper.Application.Interfaces;
 using Dapper.Core.Entities;
+using Dapper.Infrastructure.Context;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,11 @@ namespace Dapper.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository
     {
-        private readonly IConfiguration _configuration;
-        public ProductRepository(IConfiguration configuration)
+        private readonly DapperContext _context;
+
+        public ProductRepository(DapperContext context)
         {
-            _configuration = configuration;
+            _context = context; 
         }
 
 
@@ -23,7 +25,7 @@ namespace Dapper.Infrastructure.Repositories
         {
             entity.AddedOn = DateTime.Now;
             var sql = "Insert into Products (Name,Description,Barcode,Rate,AddedOn) VALUES (@Name,@Description,@Barcode,@Rate,@AddedOn)";
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = _context.CreateConnection())
             {
                 connection.Open();
                 var result = await connection.ExecuteAsync(sql, entity);
@@ -31,24 +33,54 @@ namespace Dapper.Infrastructure.Repositories
             }
         }
 
-        public Task<int> DeleteAsync(int id)
+        public async Task<int> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var sql = "Delete from Products where Id=@Id";
+            using(var connection = _context.CreateConnection())
+            {
+                connection.Open();
+                var result = await connection.ExecuteAsync(sql, new { Id = id });
+                return result;
+            }
         }
 
-        public Task<IReadOnlyList<Product>> GetAllAsync()
+        public async Task<IReadOnlyList<Product>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            var sql = "SELECT * FROM Products";
+            using(var connection = _context.CreateConnection())
+            {
+                connection.Open();
+                var result = await connection.QueryAsync<Product>(sql);
+                return result.ToList();
+            }
+
         }
 
-        public Task<Product> GetByIdAsync(int id)
+        public async Task<Product> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var sql = "SELECT * FROM Products WHERE Id=@Id";
+            using (var connection = _context.CreateConnection())
+            {
+                connection.Open();
+                var result = await connection.QuerySingleOrDefaultAsync<Product>(sql, new { Id = id });
+
+                return result;
+
+            }
         }
 
-        public Task<int> UpdateAsync(Product entity)
+        public async Task<int> UpdateAsync(Product entity)
         {
-            throw new NotImplementedException();
+            entity.ModifiedOn = DateTime.Now;
+            var sql = "UPDATE Products SET Name = @Name, Description = @Description, Barcode = @Barcode, Rate = @Rate, ModifiedOn = @ModifiedOn  WHERE Id = @Id";
+
+            using (var connection = _context.CreateConnection())
+            {
+                connection.Open();
+                var result = await connection.ExecuteAsync(sql, entity);
+                return result;
+            }
+
         }
     }
 }
