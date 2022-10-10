@@ -1,4 +1,4 @@
-﻿namespace DapperRepositoryPattern.Entities
+﻿namespace Dapper.Core.Entities
 {
     public class Product
     {

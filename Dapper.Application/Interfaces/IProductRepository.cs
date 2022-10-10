@@ -1,6 +1,6 @@
-﻿using DapperRepositoryPattern.Entities;
+﻿using Dapper.Core.Entities;
 
-namespace DapperRepositoryPattern.Interfaces
+namespace Dapper.Application.Interfaces
 {
     public interface IProductRepository:IGenericRepository<Product>
     {
