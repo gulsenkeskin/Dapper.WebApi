@@ -1,4 +1,5 @@
 using Dapper.Infrastructure;
+using Dapper.Infrastructure.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,5 +24,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCustomExceptionMiddleware();
 
 app.Run();
